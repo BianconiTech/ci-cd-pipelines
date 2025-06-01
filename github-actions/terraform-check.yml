@@ -1,0 +1,40 @@
+name: Terraform check and validate 
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  terraform-check:
+    name: Terraform Format, Init, Validate and Plan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: |
+          terraform fmt -check -recursive || (
+            echo "::error::Terraform files are not properly formatted. Test Running 'terraform fmt -recursive' locally."
+            exit 1
+          )
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Terraform Plan
+        run: terraform plan -out=plan.tfplan
+        working-directory: ${{ inputs.working-directory }}
+
+      - name: Show Plan Output
+        run: terraform show -no-color plan.tfplan
+        working-directory: ${{ inputs.working-directory }}
